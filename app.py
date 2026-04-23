@@ -35,8 +35,8 @@ DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 CACHE = {}
 
 def load_json_file(filename):
-    """Load and cache JSON file"""
-    filepath = os.path.join(DATA_DIR, filename)
+    """Load and cache JSON file from data folder"""
+    filepath = os.path.join(DATA_DIR, 'data', filename)
     
     if filename in CACHE:
         return CACHE[filename]
@@ -132,7 +132,7 @@ def get_country(country):
     country = country.lower().strip()
     
     # Security: prevent directory traversal
-    if '..' in country or '/' in country:
+    if '..' in country or '/' in country or '\\' in country:
         return jsonify({"error": "Invalid country name"}), 400
     
     data = load_json_file(f"{country}.json")
@@ -146,7 +146,7 @@ def get_country(country):
     return jsonify({
         "success": True,
         "data": data,
-        "cached": country in CACHE
+        "cached": f"{country}.json" in CACHE
     })
 
 @app.route('/countries')
@@ -154,7 +154,7 @@ def get_country(country):
 @limiter.limit("10 per minute")
 def list_countries():
     try:
-        files = glob.glob(os.path.join(DATA_DIR, '*.json'))
+        files = glob.glob(os.path.join(DATA_DIR, 'data', '*.json'))
         countries = [os.path.basename(f).replace('.json', '') for f in files]
         
         return jsonify({
